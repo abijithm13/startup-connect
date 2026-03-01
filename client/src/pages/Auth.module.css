@@ -1,0 +1,245 @@
+.authWrapper {
+  min-height: 100vh;
+  background: var(--bg-secondary);
+}
+
+.authHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 48px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.backLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.backLink:hover {
+  color: var(--primary);
+}
+
+.authBrand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.authRoleLabel {
+  text-align: center;
+  padding: 32px 24px 8px;
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: 8px 24px;
+  background: var(--gradient);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.roleBadgeUser {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+}
+
+.roleDesc {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.splitContainer {
+  display: flex;
+  gap: 0;
+  max-width: 1100px;
+  margin: 24px auto 48px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.splitPanel {
+  flex: 1;
+  padding: 36px 32px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  background: var(--bg-secondary);
+  position: relative;
+}
+
+.divider span {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 0;
+  z-index: 1;
+}
+
+.panelHeader {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.panelHeader h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.panelHeader p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.loginIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.loginIconUser {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.formGroup {
+  margin-bottom: 12px;
+}
+
+.formGroup label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.btnSubmit {
+  width: 100%;
+  padding: 12px;
+  background: var(--gradient);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 8px;
+  transition: all 0.2s;
+}
+
+.btnSubmit:hover {
+  background: var(--gradient-hover);
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+}
+
+.btnSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnUser {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+}
+
+.btnUser:hover {
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.switchRole {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
+.switchRole p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.switchLink {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.switchLink:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .splitContainer {
+    flex-direction: column;
+    margin: 16px;
+  }
+  .divider {
+    width: 100%;
+    height: 48px;
+    flex-direction: row;
+  }
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+  .authHeader {
+    padding: 16px 24px;
+  }
+}
