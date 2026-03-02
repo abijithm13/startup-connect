@@ -43,4 +43,15 @@ router.get('/startup/profile', startupAuth, async (req, res) => {
   }
 });
 
+// List job seeker users (for startups to browse candidates)
+router.get('/', startupAuth, async (req, res) => {
+  try {
+    // we could accept query parameters for filtering in future
+    const users = await User.find().select('-password');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 module.exports = router;

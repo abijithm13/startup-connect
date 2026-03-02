@@ -1,16 +1,31 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { HiOutlineRocketLaunch, HiOutlineUserGroup, HiOutlineChartBarSquare, HiOutlineBriefcase } from 'react-icons/hi2';
+import { HiOutlineRocketLaunch, HiOutlineUserGroup, HiOutlineChartBarSquare, HiOutlineBriefcase, HiMoon, HiSun } from 'react-icons/hi2';
 import styles from './Home.module.css';
 
 export default function Home() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  };
+
   return (
-    <div className={styles.wrapper}>
+    <div className={`${styles.wrapper} ${isDarkMode ? styles.dark : ''}`}>
       {/* Navbar */}
       <nav className={styles.navbar}>
         <div className={styles.logo}>
           <HiOutlineRocketLaunch size={28} />
           <span>Startup Connect</span>
         </div>
+        <button className={styles.themeToggle} onClick={toggleDarkMode} aria-label="Toggle dark mode">
+          {isDarkMode ? <HiSun size={24} /> : <HiMoon size={24} />}
+        </button>
       </nav>
 
       {/* Hero */}

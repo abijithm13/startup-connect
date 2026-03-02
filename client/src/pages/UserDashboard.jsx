@@ -26,6 +26,7 @@ export default function UserDashboard() {
   const [coverLetter, setCoverLetter] = useState('');
   const [profileForm, setProfileForm] = useState({});
   const [loading, setLoading] = useState(false);
+  
 
   const headers = { Authorization: `Bearer ${token}` };
   const categories = ['All Categories', 'Funding', 'Talent', 'Mentorship', 'Partnership', 'Other'];
@@ -96,9 +97,24 @@ export default function UserDashboard() {
     logout();
     navigate('/');
     toast.success('Logged out');
+    setShowProfileMenu(false);
+  };
+
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name.split(' ').slice(0, 2).map(p => p[0].toUpperCase()).join('');
   };
 
   const appliedIds = new Set(applications.map(a => a.requirement_id?._id));
+
+  useEffect(() => {
+    if (!showProfileMenu) return;
+    const onDocClick = () => setShowProfileMenu(false);
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, [showProfileMenu]);
 
   return (
     <div className={styles.dashWrapper}>
@@ -111,27 +127,55 @@ export default function UserDashboard() {
             <p className={styles.headerSub}>User Dashboard</p>
           </div>
         </div>
-        <button className={styles.logoutBtn} onClick={handleLogout}>
-          <HiArrowRightOnRectangle size={18} /> Logout
-        </button>
+        <div className={styles.profileContainer} onClick={() => setShowProfileMenu(prev => !prev)}>
+          <div className={styles.avatar}>{getInitials(userData?.name)}</div>
+          {showProfileMenu && (
+            <div className={styles.profileMenu} onClick={e => e.stopPropagation()}>
+              <Link to="/profile" className={styles.menuItem}>View Profile</Link>
+              <Link to="/settings" className={styles.menuItem}>Settings</Link>
+              <button className={styles.menuItem} onClick={handleLogout}>Logout</button>
+            </div>
+          )}
+        </div>
       </header>
 
       <div className={styles.dashContent}>
         {/* Tabs */}
-        <div className={styles.tabs}>
-          <button className={`${styles.tab} ${activeTab === 'browse' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('browse')}>
-            <HiOutlineBriefcase size={16} /> Browse Jobs
-          </button>
-          <button className={`${styles.tab} ${activeTab === 'profile' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('profile')}>
-            <HiOutlineUser size={16} /> My Profile
-          </button>
-          <button className={`${styles.tab} ${activeTab === 'applications' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('applications')}>
-            <HiOutlineDocumentText size={16} /> My Applications
-          </button>
-        </div>
+       <div className={styles.userTabsContainer}>
+  <div className={styles.userTabsNav}>
+
+    <button
+      className={`${styles.userTab} ${
+        activeTab === 'browse' ? styles.userTabActive : ''
+      }`}
+      onClick={() => setActiveTab('browse')}
+    >
+      <HiOutlineBriefcase size={16} />
+      <span>Browse Jobs</span>
+    </button>
+
+    <button
+      className={`${styles.userTab} ${
+        activeTab === 'profile' ? styles.userTabActive : ''
+      }`}
+      onClick={() => setActiveTab('profile')}
+    >
+      <HiOutlineUser size={16} />
+      <span>My Profile</span>
+    </button>
+
+    <button
+      className={`${styles.userTab} ${
+        activeTab === 'applications' ? styles.userTabActive : ''
+      }`}
+      onClick={() => setActiveTab('applications')}
+    >
+      <HiOutlineDocumentText size={16} />
+      <span>My Applications</span>
+    </button>
+
+  </div>
+</div>
 
         {/* Browse Jobs Tab */}
         {activeTab === 'browse' && (
