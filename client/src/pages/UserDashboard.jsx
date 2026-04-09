@@ -5,6 +5,7 @@ import {
   HiArrowLeft, HiMagnifyingGlass, HiOutlineRocketLaunch,
   HiOutlineBriefcase, HiOutlineUser, HiOutlineDocumentText,
   HiArrowRightOnRectangle, HiOutlineMapPin, HiOutlineClock,
+  HiCog6Tooth, HiBell, HiOutlineBell, // ✅ Notification icons
 } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -26,9 +27,39 @@ export default function UserDashboard() {
   const [coverLetter, setCoverLetter] = useState('');
   const [profileForm, setProfileForm] = useState({});
   const [loading, setLoading] = useState(false);
-  
-
   const headers = { Authorization: `Bearer ${token}` };
+  
+  // ✅ DROPDOWN STATES
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  // ✅ NOTIFICATION STATES
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const formatRelativeTime = (dateString) => {
+    if (!dateString) return 'Unknown';
+    const posted = new Date(dateString);
+    if (isNaN(posted)) return 'Unknown';
+
+    const now = new Date();
+    const diffMs = now - posted;
+    if (diffMs < 0) return 'Just now';
+
+    const seconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) return 'Just now';
+    if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+
+    return posted.toLocaleDateString('en-IN');
+  };
+
   const categories = ['All Categories', 'Funding', 'Talent', 'Mentorship', 'Partnership', 'Other'];
 
   const fetchRequirements = async () => {
@@ -62,8 +93,62 @@ export default function UserDashboard() {
     }
   };
 
-  useEffect(() => { fetchRequirements(); }, [search, category]);
-  useEffect(() => { fetchApplications(); fetchProfile(); }, []);
+  // ✅ FETCH NOTIFICATIONS
+  const fetchNotifications = async () => {
+    try {
+      const res = await axios.get(`${API}/notifications`, { headers });
+      setNotifications(res.data);
+      setUnreadCount(res.data.filter(n => !n.isRead).length);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => { 
+    fetchRequirements(); 
+    fetchNotifications();
+  }, [search, category]);
+
+  useEffect(() => { 
+    fetchApplications(); 
+    fetchProfile(); 
+  }, []);
+
+  // ✅ NOTIFICATION FUNCTIONS
+  const markAsRead = async (notificationId) => {
+    try {
+      await axios.put(`${API}/notifications/${notificationId}/read`, {}, { headers });
+      fetchNotifications();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const clearNotifications = async () => {
+    if (!confirm('Clear all notifications?')) return;
+    try {
+      await axios.delete(`${API}/notifications/clear`, { headers });
+      setNotifications([]);
+      setUnreadCount(0);
+      toast.success('Notifications cleared!');
+    } catch (err) {
+      toast.error('Failed to clear');
+    }
+  };
+
+  const toggleSettings = (e) => {
+    e.stopPropagation();
+    setShowSettings(!showSettings);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowProfileMenu(false);
+      setShowSettings(false);
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const handleApply = async (reqId) => {
     setLoading(true);
@@ -82,6 +167,8 @@ export default function UserDashboard() {
     }
   };
 
+  const [resumeFile, setResumeFile] = useState(null);
+
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     try {
@@ -93,14 +180,39 @@ export default function UserDashboard() {
     }
   };
 
+  const handleResumeUpload = async (e) => {
+    e.preventDefault();
+    if (!resumeFile) {
+      toast.error('Please choose a resume file first');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('resume', resumeFile);
+
+      await axios.post(`${API}/users/profile/resume`, formData, {
+        headers: {
+          ...headers,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      toast.success('Resume uploaded successfully!');
+      setResumeFile(null);
+      fetchProfile();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload resume');
+    }
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/');
     toast.success('Logged out');
     setShowProfileMenu(false);
+    setShowSettings(false);
   };
-
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const getInitials = (name) => {
     if (!name) return '?';
@@ -109,16 +221,9 @@ export default function UserDashboard() {
 
   const appliedIds = new Set(applications.map(a => a.requirement_id?._id));
 
-  useEffect(() => {
-    if (!showProfileMenu) return;
-    const onDocClick = () => setShowProfileMenu(false);
-    document.addEventListener('click', onDocClick);
-    return () => document.removeEventListener('click', onDocClick);
-  }, [showProfileMenu]);
-
   return (
     <div className={styles.dashWrapper}>
-      {/* Header */}
+      {/* ✅ HEADER WITH NOTIFICATION BELL & PERFECT PROFILE MENU */}
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <Link to="/" className={styles.headerBack}><HiArrowLeft size={18} /> Home</Link>
@@ -127,70 +232,165 @@ export default function UserDashboard() {
             <p className={styles.headerSub}>User Dashboard</p>
           </div>
         </div>
-        <div className={styles.profileContainer} onClick={() => setShowProfileMenu(prev => !prev)}>
-          <div className={styles.avatar}>{getInitials(userData?.name)}</div>
-          {showProfileMenu && (
-            <div className={styles.profileMenu} onClick={e => e.stopPropagation()}>
-              <Link to="/profile" className={styles.menuItem}>View Profile</Link>
-              <Link to="/settings" className={styles.menuItem}>Settings</Link>
-              <button className={styles.menuItem} onClick={handleLogout}>Logout</button>
+        
+        <div className={styles.headerRight}>
+          {/* ✅ NOTIFICATION BELL */}
+         <div
+  className={styles.notifBell}
+  onClick={() => {
+    setActiveTab('notifications');
+    fetchNotifications();
+  }}
+  role="button"
+  tabIndex={0}
+  title="Notifications"
+  onKeyDown={(e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      setActiveTab("notifications");
+      fetchNotifications();
+    }
+  }}
+>
+  <HiOutlineBell size={20} />
+
+  {unreadCount > 0 && (
+    <span className={styles.notificationBadge}>
+      {unreadCount > 99 ? '99+' : unreadCount}
+    </span>
+  )}
+</div>
+
+          {/* ✅ AVATAR WITH PERFECT NESTED MENU */}
+          <div className={styles.avatarWrapper}>
+            <div 
+              className={styles.avatar} 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowProfileMenu(!showProfileMenu);
+              }}
+            >
+              {getInitials(userData?.name)}
             </div>
-          )}
+
+            {showProfileMenu && (
+              <div className={styles.profileDropdown} onClick={(e) => e.stopPropagation()}>
+                {/* ✅ USER INFO */}
+                <div className={styles.profileInfo}>
+                  <h4>{userData?.name}</h4>
+                  <p>{userData?.email}</p>
+                </div>
+
+                <div className={styles.dropdownDivider}></div>
+                
+                {/* ✅ SETTINGS SECTION - EXACTLY LIKE YOU WANTED */}
+                <div className={styles.settingsSection}>
+                  <button 
+                    className={`${styles.dropdownItem} ${styles.settingsToggle}`} 
+                    onClick={toggleSettings}
+                  >
+                    <HiCog6Tooth size={18} /> Settings
+                    <span className={styles.toggleIndicator}>
+                      {showSettings ? '▲' : '▼'}
+                    </span>
+                  </button>
+                  
+                  {/* ✅ NESTED SETTINGS MENU - NO NOTIFICATIONS HERE */}
+                  {showSettings && (
+                    <div className={styles.nestedSettings}>
+                      <button className={styles.dropdownItem}>Account</button>
+                      <button className={styles.dropdownItem}>Notification</button>
+                      <button className={styles.dropdownItem}>Privacy & Security</button>
+                      <button className={styles.dropdownItem}>Help & Support</button>
+                      <button className={styles.dropdownItem}>About</button>
+                    </div>
+                  )}
+                </div>
+
+                <div className={styles.dropdownDivider}></div>
+                
+                <button
+                  onClick={handleLogout}
+                  className={styles.logoutBtn}
+                >
+                  <HiArrowRightOnRectangle size={16} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       <div className={styles.dashContent}>
-        {/* Tabs */}
-       <div className={styles.userTabsContainer}>
-  <div className={styles.userTabsNav}>
+        {/* ✅ TABS WITH NOTIFICATIONS TAB */}
+        <div className={styles.userTabsContainer}>
+          <div className={styles.userTabsNav}>
+            <button
+              className={`${styles.userTab} ${
+                activeTab === 'browse' ? styles.userTabActive : ''
+              }`}
+              onClick={() => setActiveTab('browse')}
+            >
+              <HiOutlineBriefcase size={16} />
+              <span>Browse Jobs</span>
+            </button>
 
-    <button
-      className={`${styles.userTab} ${
-        activeTab === 'browse' ? styles.userTabActive : ''
-      }`}
-      onClick={() => setActiveTab('browse')}
-    >
-      <HiOutlineBriefcase size={16} />
-      <span>Browse Jobs</span>
-    </button>
+            <button
+              className={`${styles.userTab} ${
+                activeTab === 'profile' ? styles.userTabActive : ''
+              }`}
+              onClick={() => setActiveTab('profile')}
+            >
+              <HiOutlineUser size={16} />
+              <span>My Profile</span>
+            </button>
 
-    <button
-      className={`${styles.userTab} ${
-        activeTab === 'profile' ? styles.userTabActive : ''
-      }`}
-      onClick={() => setActiveTab('profile')}
-    >
-      <HiOutlineUser size={16} />
-      <span>My Profile</span>
-    </button>
+            <button
+              className={`${styles.userTab} ${
+                activeTab === 'applications' ? styles.userTabActive : ''
+              }`}
+              onClick={() => setActiveTab('applications')}
+            >
+              <HiOutlineDocumentText size={16} />
+              <span>My Applications</span>
+            </button>
 
-    <button
-      className={`${styles.userTab} ${
-        activeTab === 'applications' ? styles.userTabActive : ''
-      }`}
-      onClick={() => setActiveTab('applications')}
-    >
-      <HiOutlineDocumentText size={16} />
-      <span>My Applications</span>
-    </button>
+            {/* ✅ NOTIFICATIONS TAB - HERE IT IS! */}
+            <button
+              className={`${styles.userTab} ${
+                activeTab === 'notifications' ? styles.userTabActive : ''
+              }`}
+              onClick={() => { 
+                setActiveTab('notifications'); 
+                fetchNotifications(); 
+              }}
+            >
+              <HiOutlineBell size={16} />
+              <span>Notifications </span>
+            </button>
+          </div>
+        </div>
 
-  </div>
-</div>
-
-        {/* Browse Jobs Tab */}
+        {/* ✅ BROWSE JOBS TAB (unchanged) */}
         {activeTab === 'browse' && (
           <>
             <div className={styles.searchBox}>
               <HiMagnifyingGlass size={18} />
-              <input type="text" placeholder="Search jobs by category, skills, or company..."
-                value={search} onChange={e => setSearch(e.target.value)} />
+              <input 
+                type="text" 
+                placeholder="Search jobs by category, skills, or company..."
+                value={search} 
+                onChange={e => setSearch(e.target.value)} 
+              />
             </div>
 
             <div className={styles.categoryBar}>
               {categories.map(cat => (
-                <button key={cat}
+                <button 
+                  key={cat}
                   className={`${styles.catBtn} ${category === cat ? styles.catBtnActive : ''}`}
-                  onClick={() => setCategory(cat)}>
+                  onClick={() => setCategory(cat)}
+                >
                   {cat}
                 </button>
               ))}
@@ -234,7 +434,7 @@ export default function UserDashboard() {
                         </span>
                       )}
                       <span className={styles.jobDetail}>
-                        <HiOutlineClock size={14} /> Posted: {new Date(req.created_at).toLocaleDateString()}
+                        <HiOutlineClock size={14} /> Posted: {formatRelativeTime(req.created_at)}
                       </span>
                     </div>
                   </div>
@@ -244,7 +444,7 @@ export default function UserDashboard() {
           </>
         )}
 
-        {/* Profile Tab */}
+        {/* ✅ PROFILE TAB (unchanged) */}
         {activeTab === 'profile' && profile && (
           <div className={styles.profileSection}>
             <div className={styles.profileCard}>
@@ -258,39 +458,86 @@ export default function UserDashboard() {
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label>Full Name</label>
-                    <input type="text" className={styles.input} value={profileForm.name || ''}
-                      onChange={e => setProfileForm({...profileForm, name: e.target.value})} />
+                    <input 
+                      type="text" 
+                      className={styles.input} 
+                      value={profileForm.name || ''}
+                      onChange={e => setProfileForm({...profileForm, name: e.target.value})} 
+                    />
                   </div>
                   <div className={styles.formGroup}>
                     <label>Phone</label>
-                    <input type="text" className={styles.input} value={profileForm.phone_number || ''}
-                      onChange={e => setProfileForm({...profileForm, phone_number: e.target.value})} />
+                    <input 
+                      type="text" 
+                      className={styles.input} 
+                      value={profileForm.phone_number || ''}
+                      onChange={e => setProfileForm({...profileForm, phone_number: e.target.value})} 
+                    />
                   </div>
                 </div>
                 <div className={styles.formGroup}>
                   <label>Location</label>
-                  <input type="text" className={styles.input} value={profileForm.location || ''}
-                    onChange={e => setProfileForm({...profileForm, location: e.target.value})} />
+                  <input 
+                    type="text" 
+                    className={styles.input} 
+                    value={profileForm.location || ''}
+                    onChange={e => setProfileForm({...profileForm, location: e.target.value})} 
+                  />
                 </div>
                 <div className={styles.formGroup}>
                   <label>Skills</label>
-                  <input type="text" className={styles.input} placeholder="React, Node.js, Python"
+                  <input 
+                    type="text" 
+                    className={styles.input} 
+                    placeholder="React, Node.js, Python"
                     value={profileForm.skills || ''}
-                    onChange={e => setProfileForm({...profileForm, skills: e.target.value})} />
+                    onChange={e => setProfileForm({...profileForm, skills: e.target.value})} 
+                  />
                 </div>
                 <div className={styles.formGroup}>
                   <label>Bio</label>
-                  <textarea className={styles.textarea} rows={3} placeholder="Tell about yourself..."
+                  <textarea 
+                    className={styles.textarea} 
+                    rows={3} 
+                    placeholder="Tell about yourself..."
                     value={profileForm.bio || ''}
-                    onChange={e => setProfileForm({...profileForm, bio: e.target.value})} />
+                    onChange={e => setProfileForm({...profileForm, bio: e.target.value})} 
+                  />
                 </div>
+
+                <div className={styles.formGroup}>
+                  <label>Resume</label>
+                  {profile?.resume_url ? (
+                    <div>
+                      <a href={profile.resume_url} target="_blank" rel="noreferrer" className={styles.link}>
+                        View uploaded resume
+                      </a>
+                    </div>
+                  ) : (
+                    <p className={styles.smallText}>No resume uploaded yet.</p>
+                  )}
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={e => setResumeFile(e.target.files?.[0] || null)}
+                    className={styles.input}
+                  />
+                  <button
+                    type="button"
+                    className={styles.btnPost}
+                    onClick={handleResumeUpload}
+                  >
+                    Upload Resume
+                  </button>
+                </div>
+
                 <button type="submit" className={styles.btnPost}>Save Profile</button>
               </form>
             </div>
           </div>
         )}
 
-        {/* Applications Tab */}
+        {/* ✅ APPLICATIONS TAB (unchanged) */}
         {activeTab === 'applications' && (
           <div className={styles.cardList}>
             {applications.length === 0 ? (
@@ -322,22 +569,85 @@ export default function UserDashboard() {
             )}
           </div>
         )}
+
+        {/* ✅ NOTIFICATIONS TAB */}
+        {activeTab === 'notifications' && (
+          <div className={styles.section}>
+            <div className={styles.notifHeader}>
+              <h2 className={styles.sectionTitle}>Notifications</h2>
+              {notifications.length > 0 && (
+                <button className={styles.btnClear} onClick={clearNotifications}>
+                  Clear All
+                </button>
+              )}
+            </div>
+            
+            {notifications.length === 0 ? (
+              <div className={styles.emptyState}>
+                <HiOutlineBell size={48} />
+                <p>No notifications</p>
+                <p style={{ color: '#6b7280', fontSize: '14px' }}>
+                  New jobs & application updates will appear here
+                </p>
+              </div>
+            ) : (
+              <div className={styles.notifList}>
+                {notifications.map(notif => (
+                  <div 
+                    key={notif._id} 
+                    className={`${styles.notifItem} ${!notif.isRead ? styles.notifUnread : ''}`}
+                    onClick={() => !notif.isRead && markAsRead(notif._id)}
+                  >
+                    <div className={styles.notifContent}>
+                      <h4>{notif.title}</h4>
+                      <p>{notif.message}</p>
+                      <span className={styles.notifTime}>
+                        {new Date(notif.createdAt).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    {!notif.isRead && (
+                      <button 
+                        className={styles.notifMarkRead} 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAsRead(notif._id);
+                        }}
+                      >
+                        ✓
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Apply Modal */}
+      {/* APPLY MODAL (unchanged) */}
       {showApplyModal && (
         <div className={styles.modalOverlay} onClick={() => setShowApplyModal(null)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <h2>Apply for this Position</h2>
             <div className={styles.formGroup}>
               <label>Cover Letter (optional)</label>
-              <textarea className={styles.textarea} rows={5}
+              <textarea 
+                className={styles.textarea} 
+                rows={5}
                 placeholder="Write why you're a great fit..."
-                value={coverLetter} onChange={e => setCoverLetter(e.target.value)} />
+                value={coverLetter} 
+                onChange={e => setCoverLetter(e.target.value)} 
+              />
             </div>
             <div className={styles.modalActions}>
-              <button className={styles.btnCancel} onClick={() => setShowApplyModal(null)}>Cancel</button>
-              <button className={styles.btnPost} onClick={() => handleApply(showApplyModal)} disabled={loading}>
+              <button className={styles.btnCancel} onClick={() => setShowApplyModal(null)}>
+                Cancel
+              </button>
+              <button 
+                className={styles.btnPost} 
+                onClick={() => handleApply(showApplyModal)} 
+                disabled={loading}
+              >
                 {loading ? 'Submitting...' : 'Submit Application'}
               </button>
             </div>

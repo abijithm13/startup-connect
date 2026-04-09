@@ -186,3 +186,43 @@
   .features { grid-template-columns: 1fr; }
   .navbar { padding: 16px 24px; }
 }
+.themeToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: currentColor;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  flex-shrink: 0;
+}
+
+.themeToggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.themeToggle:active {
+  transform: scale(0.98);
+}
+
+.theme-icon {
+  width: 24px;
+  height: 24px;
+  color: inherit;
+  stroke: currentColor;
+}
+
+/* Dark mode button styles */
+.dark .themeToggle {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dark .themeToggle:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
