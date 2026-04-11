@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -169,6 +169,8 @@ export default function UserDashboard() {
 
   const [resumeFile, setResumeFile] = useState(null);
 
+  const fileInputRef = useRef(null);
+
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     try {
@@ -226,7 +228,7 @@ export default function UserDashboard() {
       {/* ✅ HEADER WITH NOTIFICATION BELL & PERFECT PROFILE MENU */}
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <Link to="/" className={styles.headerBack}><HiArrowLeft size={18} /> Home</Link>
+          {/* <Link to="/" className={styles.headerBack}><HiArrowLeft size={18} /> Home</Link> */}
           <div>
             <h1 className={styles.headerTitle}>{userData?.name || 'User'}</h1>
             <p className={styles.headerSub}>User Dashboard</p>
@@ -516,22 +518,41 @@ export default function UserDashboard() {
                   ) : (
                     <p className={styles.smallText}>No resume uploaded yet.</p>
                   )}
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={e => setResumeFile(e.target.files?.[0] || null)}
-                    className={styles.input}
-                  />
-                  <button
-                    type="button"
-                    className={styles.btnPost}
-                    onClick={handleResumeUpload}
-                  >
-                    Upload Resume
-                  </button>
+                  <div className={styles.fileInputWrapper}>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={e => setResumeFile(e.target.files?.[0] || null)}
+                      className={styles.input}
+                    />
+                    {resumeFile && (
+                      <button
+                        type="button"
+                        className={styles.clearFileBtn}
+                        onClick={() => {
+                          setResumeFile(null);
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                          }
+                        }}
+                        title="Remove file"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <div className={styles.buttonRow}>
+                    <button
+                      type="button"
+                      className={styles.btnPost}
+                      onClick={handleResumeUpload}
+                    >
+                      Upload Resume
+                    </button>
+                    <button type="submit" className={styles.btnPost}>Save Profile</button>
+                  </div>
                 </div>
-
-                <button type="submit" className={styles.btnPost}>Save Profile</button>
               </form>
             </div>
           </div>

@@ -390,7 +390,8 @@
   font-weight: 600;
   transition: all 0.2s;
   white-space: nowrap;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
+  
 }
 
 .btnPost:hover {
@@ -489,13 +490,19 @@
 }
 
 .btnCancel {
-  padding: 10px 24px;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
+ display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    white-space: nowrap;
+    margin-bottom: 12px;
 }
 
 .iconBtn {
@@ -905,6 +912,44 @@
 .textarea {
   resize: vertical;
   min-height: 80px;
+}
+
+.fileInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.clearFileBtn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.clearFileBtn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+}
+
+.smallText {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.buttonRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 /* Modal */

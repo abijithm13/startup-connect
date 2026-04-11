@@ -19,9 +19,9 @@ export default function UserAuth() {
 
   const [regForm, setRegForm] = useState({
     name: '',
-    username: '',
     email: '',
     password: '',
+    confirmPassword: '',
     phone_number: '',
     location: '',
     skills: '',
@@ -29,16 +29,38 @@ export default function UserAuth() {
   });
 
   const [loginForm, setLoginForm] = useState({
-    username: '',
+    email: '',
     password: '',
   });
 
   const [regLoading, setRegLoading] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
 
+  const [passwordMatchMessage, setPasswordMatchMessage] = useState('');
+  const [passwordMatchColor, setPasswordMatchColor] = useState('');
+
+  const validatePasswords = (password, confirmPassword) => {
+    if (confirmPassword === '') {
+      setPasswordMatchMessage('');
+      setPasswordMatchColor('');
+      return;
+    }
+    if (password === confirmPassword) {
+      setPasswordMatchMessage('Passwords matched');
+      setPasswordMatchColor('green');
+    } else {
+      setPasswordMatchMessage('Password do not match');
+      setPasswordMatchColor('red');
+    }
+  };
+
   // ================= REGISTER =================
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (regForm.password !== regForm.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
     setRegLoading(true);
 
     try {
@@ -108,16 +130,16 @@ export default function UserAuth() {
 
             <form onSubmit={handleLogin} className={styles.form}>
               <div className={styles.formGroup}>
-                <label>Username</label>
+                <label>Email</label>
                 <input
-                  type="text"
+                  type="email"
                   className={styles.input}
-                  placeholder="Enter your username"
-                  value={loginForm.username}
+                  placeholder="Enter your email"
+                  value={loginForm.email}
                   onChange={(e) =>
                     setLoginForm({
                       ...loginForm,
-                      username: e.target.value,
+                      email: e.target.value,
                     })
                   }
                   required
@@ -184,34 +206,18 @@ export default function UserAuth() {
             </div>
 
             <form onSubmit={handleRegister} className={styles.form}>
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Full Name *</label>
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="Your full name"
-                    value={regForm.name}
-                    onChange={(e) =>
-                      setRegForm({ ...regForm, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Username *</label>
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="Choose a username"
-                    value={regForm.username}
-                    onChange={(e) =>
-                      setRegForm({ ...regForm, username: e.target.value })
-                    }
-                    required
-                  />
-                </div>
+              <div className={styles.formGroup}>
+                <label>Name *</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="Your full name"
+                  value={regForm.name}
+                  onChange={(e) =>
+                    setRegForm({ ...regForm, name: e.target.value })
+                  }
+                  required
+                />
               </div>
 
               <div className={styles.formGroup}>
@@ -230,16 +236,18 @@ export default function UserAuth() {
 
               {/* ✅ REGISTER PASSWORD WITH EYE */}
               <div className={styles.formGroup}>
-                <label>Password *</label>
+                <label>Create Password *</label>
                 <div className={styles.passwordWrapper}>
                   <input
                     type={showRegPassword ? "text" : "password"}
                     className={styles.input}
                     placeholder="Create a password"
                     value={regForm.password}
-                    onChange={(e) =>
-                      setRegForm({ ...regForm, password: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newPassword = e.target.value;
+                      setRegForm({ ...regForm, password: newPassword });
+                      validatePasswords(newPassword, regForm.confirmPassword);
+                    }}
                     required
                   />
                   <span
@@ -249,6 +257,36 @@ export default function UserAuth() {
                     {showRegPassword ? <HiEyeSlash size={20}/> : <HiEye size={20}/>}
                   </span>
                 </div>
+              </div>
+
+              {/* ✅ CONFIRM PASSWORD */}
+              <div className={styles.formGroup}>
+                <label>Confirm Password *</label>
+                <div className={styles.passwordWrapper}>
+                  <input
+                    type={showRegPassword ? "text" : "password"}
+                    className={styles.input}
+                    placeholder="Confirm your password"
+                    value={regForm.confirmPassword}
+                    onChange={(e) => {
+                      const newConfirmPassword = e.target.value;
+                      setRegForm({ ...regForm, confirmPassword: newConfirmPassword });
+                      validatePasswords(regForm.password, newConfirmPassword);
+                    }}
+                    required
+                  />
+                  <span
+                    className={styles.passwordIcon}
+                    onClick={() => setShowRegPassword(!showRegPassword)}
+                  >
+                    {showRegPassword ? <HiEyeSlash size={20}/> : <HiEye size={20}/>}
+                  </span>
+                </div>
+                {passwordMatchMessage && (
+                  <p style={{ color: passwordMatchColor, fontSize: '14px', marginTop: '4px' }}>
+                    {passwordMatchMessage}
+                  </p>
+                )}
               </div>
 
               <div className={styles.formRow}>
@@ -273,7 +311,7 @@ export default function UserAuth() {
                   <input
                     type="text"
                     className={styles.input}
-                    placeholder="City, Country"
+                    placeholder="City, State"
                     value={regForm.location}
                     onChange={(e) =>
                       setRegForm({ ...regForm, location: e.target.value })

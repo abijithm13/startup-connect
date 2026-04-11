@@ -1,13 +1,19 @@
+const dns = require('node:dns');
+dns.setServers(['1.1.1.1', '8.8.8.8']);
+
+
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
-
+require('dotenv').config({ path: __dirname + '/.env' });
+console.log("MONGO URI:", process.env.MONGODB_URI);
 const authRoutes = require('./routes/auth');
 const requirementRoutes = require('./routes/requirements');
 const applicationRoutes = require('./routes/applications');
 const userRoutes = require('./routes/users');
+
+
 
 const app = express();
 

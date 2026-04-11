@@ -22,6 +22,7 @@ export default function StartupAuth() {
     founder_name: '',
     email: '',
     password: '',
+    confirmPassword: '',
     location: '',
     domain: '',
     established_year: '',
@@ -36,9 +37,31 @@ export default function StartupAuth() {
   const [regLoading, setRegLoading] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
 
+  const [passwordMatchMessage, setPasswordMatchMessage] = useState('');
+  const [passwordMatchColor, setPasswordMatchColor] = useState('');
+
+  const validatePasswords = (password, confirmPassword) => {
+    if (confirmPassword === '') {
+      setPasswordMatchMessage('');
+      setPasswordMatchColor('');
+      return;
+    }
+    if (password === confirmPassword) {
+      setPasswordMatchMessage('Passwords matched');
+      setPasswordMatchColor('green');
+    } else {
+      setPasswordMatchMessage('Passwords do not match');
+      setPasswordMatchColor('red');
+    }
+  };
+
   // ================= REGISTER =================
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (regForm.password !== regForm.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
     setRegLoading(true);
 
     try {
@@ -230,9 +253,11 @@ export default function StartupAuth() {
                     className={styles.input}
                     placeholder="Create a password"
                     value={regForm.password}
-                    onChange={(e) =>
-                      setRegForm({ ...regForm, password: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newPassword = e.target.value;
+                      setRegForm({ ...regForm, password: newPassword });
+                      validatePasswords(newPassword, regForm.confirmPassword);
+                    }}
                     required
                   />
                   <span
@@ -242,6 +267,36 @@ export default function StartupAuth() {
                     {showRegPassword ? <HiEyeSlash size={20}/> : <HiEye size={20}/>}
                   </span>
                 </div>
+              </div>
+
+              {/* ✅ CONFIRM PASSWORD */}
+              <div className={styles.formGroup}>
+                <label>Confirm Password *</label>
+                <div className={styles.passwordWrapper}>
+                  <input
+                    type={showRegPassword ? "text" : "password"}
+                    className={styles.input}
+                    placeholder="Confirm your password"
+                    value={regForm.confirmPassword}
+                    onChange={(e) => {
+                      const newConfirmPassword = e.target.value;
+                      setRegForm({ ...regForm, confirmPassword: newConfirmPassword });
+                      validatePasswords(regForm.password, newConfirmPassword);
+                    }}
+                    required
+                  />
+                  <span
+                    className={styles.passwordIcon}
+                    onClick={() => setShowRegPassword(!showRegPassword)}
+                  >
+                    {showRegPassword ? <HiEyeSlash size={20}/> : <HiEye size={20}/>}
+                  </span>
+                </div>
+                {passwordMatchMessage && (
+                  <p style={{ color: passwordMatchColor, fontSize: '14px', marginTop: '4px' }}>
+                    {passwordMatchMessage}
+                  </p>
+                )}
               </div>
 
               <div className={styles.formRow}>
